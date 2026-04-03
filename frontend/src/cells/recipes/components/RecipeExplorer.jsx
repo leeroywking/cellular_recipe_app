@@ -1,3 +1,14 @@
+function formatInstructionSteps(instructions) {
+  return String(instructions)
+    .split(/\n+/)
+    .flatMap((line) =>
+      line
+        .split(/(?<=[.!?])\s+(?=[A-Z0-9])/)
+        .map((step) => step.replace(/^[-•]\s*/, "").trim())
+        .filter(Boolean),
+    );
+}
+
 export function RecipeExplorer({
   onSearch,
   onSave,
@@ -16,6 +27,10 @@ export function RecipeExplorer({
   onCopyInstructions,
   copyFeedback,
 }) {
+  const instructionSteps = selectedSavedRecipe?.instructions
+    ? formatInstructionSteps(selectedSavedRecipe.instructions)
+    : [];
+
   return (
     <>
       <section className="recipe-section" id="recipes">
@@ -192,8 +207,12 @@ export function RecipeExplorer({
                   Copy instructions
                 </button>
               </div>
-              {selectedSavedRecipe.instructions ? (
-                <pre className="recipe-instructions">{selectedSavedRecipe.instructions}</pre>
+              {instructionSteps.length ? (
+                <ol className="recipe-instructions">
+                  {instructionSteps.map((step, index) => (
+                    <li key={`${index}-${step}`}>{step}</li>
+                  ))}
+                </ol>
               ) : (
                 <p className="muted">No instructions available.</p>
               )}

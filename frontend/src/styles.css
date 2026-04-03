@@ -366,9 +366,12 @@ code {
 
 .recipe-instructions {
   margin: 0;
-  white-space: pre-wrap;
-  font: inherit;
+  padding-left: 1.25rem;
   color: #5f564e;
+}
+
+.recipe-instructions li + li {
+  margin-top: 0.55rem;
 }
 
 .recipe-copy-feedback {
