@@ -168,6 +168,7 @@ def _normalize_recipe(recipe: dict[str, Any]) -> dict[str, Any]:
         "readyInMinutes": recipe.get("readyInMinutes"),
         "servings": recipe.get("servings"),
         "summary": _strip_html(recipe.get("summary", "")),
+        "instructions": _strip_html(recipe.get("instructions", "")),
         "ingredients": [
             ingredient.get("original")
             for ingredient in recipe.get("extendedIngredients", [])
@@ -193,6 +194,7 @@ def _normalize_saved_recipe(recipe: dict[str, Any]) -> dict[str, Any]:
         "readyInMinutes": recipe.get("readyInMinutes"),
         "servings": recipe.get("servings"),
         "summary": str(recipe.get("summary", "")).strip(),
+        "instructions": str(recipe.get("instructions", "")).strip(),
         "ingredients": [
             str(ingredient).strip()
             for ingredient in recipe.get("ingredients", [])
@@ -210,7 +212,17 @@ def _strip_html(value: str) -> str:
         "</i>": "",
         "<p>": "",
         "</p>": "",
+        "<ol>": "",
+        "</ol>": "",
+        "<ul>": "",
+        "</ul>": "",
+        "<li>": "- ",
+        "</li>": "\n",
+        "<br>": "\n",
+        "<br/>": "\n",
+        "<br />": "\n",
     }
     for source, target in replacements.items():
         text = text.replace(source, target)
-    return " ".join(text.split())
+    lines = [line.strip() for line in text.splitlines()]
+    return "\n".join(line for line in lines if line)
