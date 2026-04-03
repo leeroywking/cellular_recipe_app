@@ -20,6 +20,8 @@ export default function App() {
   const [recipeSaveError, setRecipeSaveError] = useState("");
   const [isSearchingRecipes, setIsSearchingRecipes] = useState(false);
   const [savingRecipeId, setSavingRecipeId] = useState(null);
+  const [selectedSavedRecipe, setSelectedSavedRecipe] = useState(null);
+  const [copyFeedback, setCopyFeedback] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -104,6 +106,21 @@ export default function App() {
     }
   }
 
+  async function handleCopyText(text, label) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyFeedback(`${label} copied.`);
+      window.setTimeout(() => {
+        setCopyFeedback("");
+      }, 2000);
+    } catch {
+      setCopyFeedback(`Could not copy ${label.toLowerCase()}.`);
+      window.setTimeout(() => {
+        setCopyFeedback("");
+      }, 2000);
+    }
+  }
+
   return (
     <main className="shell">
       <section className="hero hero-grid">
@@ -153,6 +170,16 @@ export default function App() {
         saveError={recipeSaveError}
         isSearching={isSearchingRecipes}
         isSavingRecipeId={savingRecipeId}
+        selectedSavedRecipe={selectedSavedRecipe}
+        onSelectSavedRecipe={setSelectedSavedRecipe}
+        onCloseSavedRecipe={() => setSelectedSavedRecipe(null)}
+        onCopyIngredients={(recipe) =>
+          handleCopyText((recipe.ingredients || []).join("\n"), "Ingredients")
+        }
+        onCopyInstructions={(recipe) =>
+          handleCopyText(recipe.instructions || "", "Instructions")
+        }
+        copyFeedback={copyFeedback}
       />
 
       <section className="landing-grid" id="overview">

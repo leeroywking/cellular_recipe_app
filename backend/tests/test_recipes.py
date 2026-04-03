@@ -16,6 +16,7 @@ def test_recipe_search_returns_results(monkeypatch):
                     "readyInMinutes": 20,
                     "servings": 2,
                     "summary": "Bright and quick.",
+                    "instructions": "Boil pasta.\nMix with sauce.",
                     "ingredients": ["200g pasta", "1 lemon", "2 tbsp olive oil"],
                 }
             ],
@@ -61,6 +62,7 @@ def test_recipe_save_and_list():
         "readyInMinutes": 20,
         "servings": 2,
         "summary": "Bright and quick.",
+        "instructions": "Boil pasta.\nMix with sauce.",
         "ingredients": ["200g pasta", "1 lemon", "2 tbsp olive oil"],
     }
 
@@ -76,5 +78,6 @@ def test_recipe_save_and_list():
     assert len(list_payload["saved"]) == 1
     assert list_payload["saved"][0]["id"] == 101
     assert list_payload["saved"][0]["ingredients"][1] == "1 lemon"
+    assert "Boil pasta." in list_payload["saved"][0]["instructions"]
 
     service._saved_recipes.clear()
