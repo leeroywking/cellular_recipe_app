@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { fetchHello } from "../cells/hello/api/fetchHello";
-import { HelloPanel } from "../cells/hello/components/HelloPanel";
 import { fetchRecipeSearch } from "../cells/recipes/api/fetchRecipeSearch";
 import { fetchSavedRecipes } from "../cells/recipes/api/fetchSavedRecipes";
 import { saveRecipe } from "../cells/recipes/api/saveRecipe";
-import { RecipeExplorer } from "../cells/recipes/components/RecipeExplorer";
 import { fetchStatus } from "../cells/status/api/fetchStatus";
-import { StatusCard } from "../cells/status/components/StatusCard";
+import { AdminPage } from "./pages/AdminPage";
+import { HomePage } from "./pages/HomePage";
 
 export default function App() {
+  const [pathname, setPathname] = useState(window.location.pathname);
   const [hello, setHello] = useState(null);
   const [helloError, setHelloError] = useState("");
   const [status, setStatus] = useState(null);
@@ -24,6 +24,42 @@ export default function App() {
   const [copyFeedback, setCopyFeedback] = useState("");
 
   useEffect(() => {
+    function handlePopState() {
+      setPathname(window.location.pathname);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    fetchSavedRecipes()
+      .then((payload) => {
+        if (active) {
+          setSavedRecipes(payload.saved || []);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setRecipeSaveError("Saved recipes could not be loaded.");
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (pathname !== "/admin") {
+      return undefined;
+    }
+
     let active = true;
 
     fetchHello()
@@ -50,22 +86,10 @@ export default function App() {
         }
       });
 
-    fetchSavedRecipes()
-      .then((payload) => {
-        if (active) {
-          setSavedRecipes(payload.saved || []);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setRecipeSaveError("Saved recipes could not be loaded.");
-        }
-      });
-
     return () => {
       active = false;
     };
-  }, []);
+  }, [pathname]);
 
   async function handleRecipeSearch(event) {
     event.preventDefault();
@@ -121,48 +145,34 @@ export default function App() {
     }
   }
 
+  function handleNavigate(nextPath) {
+    if (nextPath === pathname) {
+      return;
+    }
+
+    window.history.pushState({}, "", nextPath);
+    setPathname(nextPath);
+    setSelectedSavedRecipe(null);
+  }
+
+  if (pathname === "/admin") {
+    return (
+      <AdminPage
+        hello={hello}
+        helloError={helloError}
+        status={status}
+        statusError={error}
+        onNavigate={handleNavigate}
+      />
+    );
+  }
+
   return (
-    <main className="shell">
-      <section className="hero hero-grid">
-        <div>
-          <p className="eyebrow">Cellular Architecture Starter</p>
-          <h1>React at the edge. Flask behind feature cells.</h1>
-          <p className="lede">
-            A landing-page skeleton backed by isolated frontend and backend
-            cells, designed to grow by composition instead of accretion.
-          </p>
-          <div className="cta-row">
-            <a className="cta" href="#overview">
-              Explore structure
-            </a>
-            <a className="cta secondary" href="#api">
-              View live API data
-            </a>
-          </div>
-        </div>
-        <HelloPanel hello={hello} error={helloError} />
-      </section>
-
-      <section className="grid" id="api">
-        <StatusCard status={status} error={error} />
-        <article className="panel">
-          <h2>How this is organized</h2>
-          <p>
-            The gateway exposes one surface, while each feature cell owns its
-            frontend slice and backend capability.
-          </p>
-          <ul>
-            <li>UI lives under <code>frontend/src/cells</code>.</li>
-            <li>API cells live under <code>backend/cells</code>.</li>
-            <li>Docker keeps edge, client, and API concerns isolated.</li>
-          </ul>
-        </article>
-      </section>
-
-      <RecipeExplorer
-        onSearch={handleRecipeSearch}
-        onSave={handleSaveRecipe}
-        query={recipeQuery}
+    <HomePage
+      onNavigate={handleNavigate}
+      onSearch={handleRecipeSearch}
+      onSave={handleSaveRecipe}
+      query={recipeQuery}
         setQuery={setRecipeQuery}
         results={recipeResults}
         savedRecipes={savedRecipes}
@@ -180,26 +190,6 @@ export default function App() {
           handleCopyText(recipe.instructions || "", "Instructions")
         }
         copyFeedback={copyFeedback}
-      />
-
-      <section className="landing-grid" id="overview">
-        <article className="panel">
-          <p className="section-label">Landing Page</p>
-          <h2>Skeleton sections ready to extend</h2>
-          <p>
-            This page now has a hero area, live backend content, architecture
-            summary, and room for additional feature sections.
-          </p>
-        </article>
-        <article className="panel accent">
-          <p className="section-label">Next Cells</p>
-          <h2>Recipes now have a first live integration</h2>
-          <p>
-            Search is now routed through Flask, and saved recipes are ready for
-            a later persistence layer.
-          </p>
-        </article>
-      </section>
-    </main>
+    />
   );
 }
